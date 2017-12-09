@@ -9,5 +9,7 @@ license       = "MIT"
 
 requires "nim >= 0.17.3"
 requires "emmy"
+requires "docopt"
 
 skipFiles = @["test.nim"]
+bin = @["noodle"]
