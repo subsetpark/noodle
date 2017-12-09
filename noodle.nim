@@ -79,7 +79,7 @@ converter parse*(s: string): Formula =
       bindVariable(element)
       result[i] = Sign(kind: skVariable, variable: element)
 
-converter toExponent*(sign: Sign): BigInt =
+converter toExponent(sign: Sign): BigInt =
   case sign.kind
   of skSyntax:
     sign.syntaxSign.int.initBigInt
@@ -104,7 +104,7 @@ converter toComponents*(f: Formula): Factors =
 
 proc resolve*(p: Power): BigInt = pow(p.base, p.exponent)
 
-converter product*(components: seq[Power]): NoodleNumber =
+converter product*(components: Factors): NoodleNumber =
   var v = 1.initBigInt
   for component in components:
     v *= component.resolve
