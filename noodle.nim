@@ -131,7 +131,6 @@ converter toFactors(n: BigInt): Factors =
     highFactor = max(factors)
     highFactorIdx = findPrime(highFactor)
 
-
   var counterSeq = newSeqWith(highFactorIdx + 1, 0.initBigInt)
 
   for f in factors:
@@ -144,9 +143,8 @@ converter toFactors(n: BigInt): Factors =
       for j, count in counterSeq:
         if count > 0:
           populatedPrimes.add(getPrime(j))
-      let msg = "Factors are not the sequential primes: $# -> $#. This is not a Noodle number." % [
-        $populatedPrimes, $getPrime(i)
-      ]
+      let msg = "Factors are not the sequential primes: $#. This is not a Noodle number." %
+        $populatedPrimes
       raise newException(NonSequentialPrimeError, msg)
     elif count == 0:
       isZero = true
