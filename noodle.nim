@@ -46,6 +46,7 @@ type
     bindings: Table[string, BigInt]
     reverseBindings: Table[BigInt, string]
     index: int
+    variableChar: char
 
 proc `$`*(sign: Sign): string =
   case sign.kind
@@ -58,7 +59,8 @@ proc `$`*(formula: Formula): string =
 var variableBindings = Bindings(
   bindings: initTable[string, BigInt](),
   reverseBindings: initTable[BigInt, string](),
-  index: 5 # variables start at 13
+  index: 5, # variables start at 13
+  variableChar: 'a'
 )
 proc bindVariable(variable: string) =
   if variable notin variableBindings.bindings:
@@ -99,12 +101,16 @@ proc `$`*(p: Power): string = "$#^$#" % [$p.base, $p.exponent]
 proc `$`*(factors: Factors): string = "( " & factors.join(" × ") & " )"
 
 converter toComponents*(f: Formula): Factors =
+  result = newSeq[Power](f.len)
 
-  let
-    bases = (toSeq f.low..f.high).mapIt(getPrime(it)).mapIt(it.initBigInt)
-    exponents = f.mapIt(it.BigInt)
-
-  result = zip(bases, exponents).mapIt(Power(base: it.a, exponent: it.b))
+  for i, sign in f:
+    let
+      base = getPrime(i)
+      exponent = sign.initBigInt
+    result[i] = Power(
+      base: base,
+      exponent: exponent
+    )
 
 proc resolve*(p: Power): BigInt = pow(p.base, p.exponent)
 
@@ -119,21 +125,18 @@ converter toNoodleNumber*(i: int): NoodleNumber = i.initBigInt.NoodleNumber
 
 type NonSequentialPrimeError = object of ValueError
 
-converter toFactors[T: int | BigInt](n: T): Factors =
-  echo "Factoring... ", n
-  var
-    factors = factor(n)
-    seenFactors, count: int
-  echo "Factored."
-  when T is int:
-    var counterSeq = newSeq[int](factors.len)
-  else:
-    var counterSeq = newSeqWith(factors.len, 0.initBigInt)
+converter toFactors(n: BigInt): Factors =
+  let
+    factors = n.factors
+    highFactor = max(factors)
+    highFactorIdx = findPrime(highFactor)
+
+
+  var counterSeq = newSeqWith(highFactorIdx + 1, 0.initBigInt)
 
   for f in factors:
     let counterIdx = findPrime(f)
     counterSeq[counterIdx] += 1
-  echo "Counted primes. ", counterSeq
   var isZero = false
   for i, count in counterSeq:
     if isZero and count > 0:
@@ -147,6 +150,7 @@ converter toFactors[T: int | BigInt](n: T): Factors =
       raise newException(NonSequentialPrimeError, msg)
     elif count == 0:
       isZero = true
+  result = newSeq[Power](counterSeq.filterIt(it > 0).len)
   for i, count in counterSeq:
     let
       prime = getPrime(i)
@@ -154,8 +158,7 @@ converter toFactors[T: int | BigInt](n: T): Factors =
         base: prime,
         exponent: count
       )
-    echo "Adding power.", newPower
-    result.add(newPower)
+    result[i] = (newPower)
 
 converter toSign(power: Power): Sign =
   if power.exponent in 1.BigInt..12.BigInt:
@@ -164,6 +167,14 @@ converter toSign(power: Power): Sign =
     result.syntaxSign = power.exponent.`$`.parseInt.SyntaxSign
   else:
     result.kind = skVariable
+    if power.exponent notin variableBindings.reverseBindings:
+      while $variableBindings.variableChar in variableBindings.bindings:
+        variableBindings.variableChar = (
+          variableBindings.variableChar.int +
+          1
+        ).chr
+      let newVar = $variableBindings.variableChar
+      bindVariable(newVar)
     result.variable = variableBindings.reverseBindings[power.exponent]
 
 converter toFormula(factors: Factors): Formula =
@@ -176,13 +187,9 @@ when isMainModule:
   let
     args = docopt(helpText, version = "Noodle 0.2")
     decode = args["-d"]
-  echo "Decode ", decode
-  echo args
   if decode:
     let num = args["<num>"].`$`.initBigInt
-    echo "Big int: ", num
     try:
-      echo "Building formula."
       echo num.Formula
     except NonSequentialPrimeError as e:
       echo e.msg

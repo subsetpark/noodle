@@ -1,6 +1,8 @@
 import random, math, emmy, bigints, strutils
 import primes
 
+randomize()
+
 type Num = int | BigInt
 
 proc abs(n: BigInt): BigInt =
@@ -19,7 +21,7 @@ proc randOneTo(n: int): int = random(n) + 1
 
 proc brent*[T: Num](n: T): T =
   when T is BigInt:
-    if primes.checkKnownPrimes(n):
+    if n <= maxPrime and primes.checkKnownPrimes(n):
       return n
 
   if n mod 2 == 0:
@@ -89,7 +91,7 @@ proc isPrime(n: BigInt): bool =
   else:
     result = brent(n) == n
 
-proc factor*[T: Num](X: T): seq[T] =
+proc factors*[T: Num](X: T): seq[T] =
   result = newSeq[T]()
 
   var x = X
@@ -98,15 +100,15 @@ proc factor*[T: Num](X: T): seq[T] =
     if newFactor.isPrime:
       result.add(newFactor)
     else:
-      let subFactors = factor(newFactor)
+      let subFactors = newFactor.factors
       result &= subFactors
     x = x div newFactor
 
 when isMainModule:
-  echo 12, factor(12)
-  echo 24, factor(24)
-  echo 13, factor(13)
-  echo $14.initBigInt, $factor(14.initBigInt)
+  echo 12, 12.factors
+  echo 24, 24.factors
+  echo 13, 13.factors
+  echo $14.initBigInt, $14.initBigInt.factors
   let x = "86454241232213244940572171129190212913163914455885369651984583708290030003086155865969700000000".initBigInt
-  echo factor(x)
-  echo factor("243000000".initBigInt)
+  echo x.factors
+  echo "243000000".initBigInt.factors

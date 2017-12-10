@@ -15,16 +15,21 @@ proc getPrime*(i: int): BigInt =
 proc findPrime1(p: BigInt): int {.memoized.} =
   let idx = primesList.find(p.`$`.parseInt)
   if idx == -1:
-    raise newException(IndexError, "Prime not in primes list.")
+    raise newException(IndexError, "Prime not in primes list: $#" % $p)
 
   result = idx
 
 proc findPrime*(p: BigInt): int =
-  findPrime1(p)
+  result = findPrime1(p)
 
 proc checkKnownPrimes1(n: BigInt): bool {.memoized.} =
-  let downCast = n.`$`.parseInt
-  result = downCast in primesSet
+  try:
+    let downCast = n.`$`.parseInt
+    result = downCast in primesSet
+  except OverflowError:
+    result =  false
+  except RangeError:
+    result = false
 
 proc checkKnownPrimes*(n: BigInt): bool =
   checkKnownPrimes1(n)
