@@ -17,7 +17,8 @@ proc gcd(x, y: BigInt): BigInt =
     swap x, y
   abs x
 
-proc randOneTo(n: int): int = random(n) + 1
+proc randOneTo(n: int): int =
+  result = random(n) + 1
 
 proc brent*[T: Num](n: T): T =
   when T is BigInt:
@@ -105,6 +106,7 @@ proc factors*[T: Num](X: T): seq[T] =
     x = x div newFactor
 
 when isMainModule:
+  randomize()
   echo 12, 12.factors
   echo 24, 24.factors
   echo 13, 13.factors
@@ -112,3 +114,5 @@ when isMainModule:
   let x = "86454241232213244940572171129190212913163914455885369651984583708290030003086155865969700000000".initBigInt
   echo x.factors
   echo "243000000".initBigInt.factors
+  let y = "5360325091417636408929324124026616273125961139637047656420202769496479504673257011276160038152183519255743750000000000000".initBigInt
+  echo y.factors
